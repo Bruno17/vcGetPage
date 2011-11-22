@@ -38,27 +38,31 @@ function getpage_buildControls(& $modx, $properties) {
 }
 
 function getpage_makeUrl(& $modx, $properties, $pageNo, $tpl) {
+
     $vc =& $modx->visioncart;
-    //print_r($vc->router);
-    
-    $category = $modx->getPlaceholder('vc.category.id');
-    $shop = $modx->getPlaceholder('vc.shop.id');
-    
-    $parameters = $properties['qs'];
-    $parameters[$properties['pageVarKey']] = $pageNo;
-    
-    //print_r($parameters);
+    $params = array();
+    if (is_object($vc->category)){
+        $params['categoryId'] = $vc->category->get('id');
+    }
+    if (is_object($vc->product)){
+        $params['productCategory'] = $vc->product->get('id'); 
+    }
+    if (is_object($vc->shop)){
+        $parameters = $properties['qs'];
+        $parameters[$properties['pageVarKey']] = $pageNo;
         $delimiter = '?';
         foreach ($parameters as $paramKey => $paramVal) {
             $qs .= $delimiter . urlencode($paramKey) . '=' . urlencode($paramVal);
             $delimiter = '&';
         }
-        //echo $qs; 
-    //$properties['href'] = $modx->makeUrl($modx->resource->get('id'), '', $qs);
-    $properties['href'] = $vc->makeUrl(array(
- 				'categoryId' => $category,
- 				'shopId' =>  $shop
- 			)).$qs;    
+        $params['shopId'] = $vc->shop->get('id');
+        $properties['href'] = $vc->makeUrl($params).$qs;   
+    }
+    else{
+        $qs = $properties['qs'];
+        $qs[$properties['pageVarKey']] = $pageNo;
+        $properties['href'] = $modx->makeUrl($modx->resource->get('id'), '', $qs);        
+    } 
     
     $properties['pageNo'] = $pageNo;
     $nav= $modx->newObject('modChunk')->process($properties, $tpl);
